@@ -1,0 +1,212 @@
+openapi: 3.0.1
+info:
+  title: Chat API
+  version: 1.0.0
+servers:
+  - url: /api/chat/v1
+
+paths:
+  /chat:
+    post:
+      summary: Create chat
+      tags:
+        - Chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Chat"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+        500:
+          $ref: "#/components/responses/InternalError"
+  /chat/{id}:
+    get:
+      summary: Get chat
+      tags:
+        - Chat
+      parameters:
+        - in: path
+          name: id
+          description: Chat id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+        404:
+          $ref: "#/components/responses/ChatNotFound"
+        500:
+          $ref: "#/components/responses/InternalError"
+  /message:
+    post:
+      summary: Post message
+      tags:
+        - Message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Message"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        404:
+          $ref: "#/components/responses/ChatNotFound"
+        500:
+          $ref: "#/components/responses/InternalError"
+    get:
+      summary: Get messages
+      tags:
+        - Message
+      parameters:
+        - in: query
+          description: Chat id
+          name: chatId
+          schema:
+            $ref: "#/components/schemas/UUID"
+          required: false
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Range"
+      responses:
+        201:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+          headers:
+            Content-Range:
+              $ref: "#/components/headers/Content-Range"
+        500:
+          $ref: "#/components/responses/InternalError"
+components:
+  responses:
+    # 0000-0999 General errors
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEntry"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEntry"
+          example:
+            code: "CT-0002"
+            title: "Unauthorized"
+            message: "Invalid credentials"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEntry"
+          example:
+            code: "CT-0003"
+            title: "Forbidden"
+            message: "Forbidden"
+    # 1000-1999 Chat errors
+    ChatNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEntry"
+          example:
+            code: "CT-1001"
+            title: "Chat not found"
+            message: "No chat found by provided id"
+    # 2000-2999 Message errors
+  parameters:
+    Sort:
+      name: "sort"
+      in: query
+      description: Sort
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: "(\\w+):(asc|desc)"
+      example:
+        - "name:asc"
+        - "date:desc"
+    Range:
+      name: "Range"
+      in: header
+      description: Range
+      schema:
+        type: string
+        pattern: "(\\d+)-(\\d+)"
+      example: "1-10"
+  headers:
+    Content-Range:
+      description: Content range
+      schema:
+        type: string
+        pattern: "(\\d+)-(\\d+)/(\\d+)"
+        example: "1-10/57"
+  schemas:
+    UUID:
+      type: string
+      pattern: "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}"
+      example: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22"
+    ErrorEntry:
+      type: object
+      properties:
+        code:
+          type: string
+          pattern: "CT\\-[0-9]{4}"
+          example: "CT-0001"
+        title:
+          type: string
+          example: "Unexpected error"
+        message:
+          type: string
+          example: "<Reason_here>"
+    Chat:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        name:
+          type: string
+          example: "Chat"
+        usersOnline:
+          type: array
+          items:
+            $ref: "#/components/schemas/UUID"
+    Message:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        chatId:
+          $ref: "#/components/schemas/UUID"
+        authorId:
+          $ref: "#/components/schemas/UUID"
+        message:
+          type: string
+          example: "Message"
+        date:
+          type: string
+          format: date

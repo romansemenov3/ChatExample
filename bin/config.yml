@@ -1,0 +1,14 @@
+port: 8101
+
+database:
+  url: mongodb://localhost/chat
+
+amqp:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+
+auth:
+  secret: d94df05769be61bec268a5643024cb3652afa417833bde02bb86d57282b5efc6f24e83cbfd5b299a37f1fb4038aa2648ae9f761d9f0f2b59123c86f237b8313d
+  # 224464bb-96ec-44ef-9566-4341fca20a71
